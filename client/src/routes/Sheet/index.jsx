@@ -5,7 +5,7 @@ import axios from 'axios'
 // helpers
 import isObjectEmpty from 'helpers/isObjectEmpty'
 
-const Sheet = ({ match }) => {
+const Sheet = ({ history, match }) => {
   const [sheet, set] = useState({})
   const { sheetId } = match.params
 
@@ -26,6 +26,13 @@ const Sheet = ({ match }) => {
         data: sheet.data
       })
       .then(res => console.log(res))
+      .catch(err => console.error(err))
+  }
+
+  const handleDelete = () => {
+    axios
+      .delete(`/api/sheets/${sheetId}`)
+      .then(() => history.push('/'))
       .catch(err => console.error(err))
   }
 
@@ -108,6 +115,7 @@ const Sheet = ({ match }) => {
       <button onClick={removeColumn}>Remove Column</button>
       <button onClick={addRow}>Add Row</button>
       <button onClick={handleSave}>Save</button>
+      <button onClick={handleDelete}>Delete</button>
       <table>
         <thead>
           <tr>

@@ -7,7 +7,9 @@ const Home = () => {
   const retriveSheets = () => {
     axios
       .get('/api/sheets')
-      .then(res => set(res.data))
+      .then(res => {
+        if (res.status === 200) return set(res.data)
+      })
       .catch(err => console.error(err))
   }
 
@@ -19,7 +21,9 @@ const Home = () => {
       .post('/api/sheets', {
         name: form.name
       })
-      .then(res => console.log(res.data))
+      .then(res => {
+        if (res.status === 200) return set([...sheets, res.data])
+      })
       .catch(err => console.err(err))
   }
 
@@ -40,12 +44,14 @@ const Home = () => {
         <button type="submit">submit</button>
       </form>
       <hr />
-      {sheets.length ? (
-        sheets.map(({ _id, name }) => (
-          <Link key={_id} to={`/${_id}`}>
-            {name}
-          </Link>
-        ))
+      {Array.isArray(sheets) && sheets.length ? (
+        <ul>
+          {sheets.map(({ _id, name }) => (
+            <li key={_id}>
+              <Link to={`/${_id}`} children={name} />
+            </li>
+          ))}
+        </ul>
       ) : (
         <p>no sheets</p>
       )}

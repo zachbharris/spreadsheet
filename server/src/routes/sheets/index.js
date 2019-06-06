@@ -7,8 +7,8 @@ router
   .route("/")
   .get(async (req, res, next) => {
     const sheets = await Sheet.find({});
-    if (!sheets.length) return res.send("No sheets available");
-    return res.send(sheets);
+    if (!sheets.length) return res.status(404).send("No sheets available");
+    return res.status(200).send(sheets);
   })
   .post((req, res, next) => {
     return new Sheet({
