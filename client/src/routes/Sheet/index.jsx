@@ -1,21 +1,42 @@
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import axios from 'axios'
 
-const initialData = [
-  [
-    { type: 'text', value: '' },
-    { type: 'text', value: '' },
-    { type: 'number', value: '' }
-  ],
-  [{ value: '' }, { value: '' }, { value: '' }],
-  [{ value: '' }, { value: '' }, { value: '' }],
-  [{ value: '' }, { value: '' }, { value: '' }],
-  [{ value: '' }, { value: '' }, { value: '' }]
-]
+// helpers
+import isObjectEmpty from 'helpers/isObjectEmpty'
 
-const Sheet = () => {
-  const [data, set] = useState(initialData)
+const Sheet = ({ match }) => {
+  const [sheet, set] = useState({})
+  const { sheetId } = match.params
+
+  const getSheet = useCallback(() => {
+    return axios(`/api/sheets/${sheetId}`)
+      .then(res => set(res.data))
+      .catch(err => console.error(err))
+  }, [sheetId])
+
+  useEffect(() => {
+    if (isObjectEmpty(sheet)) getSheet()
+  }, [getSheet, sheet])
+
+  const handleSave = () => {
+    axios
+      .patch(`/api/sheets/${sheetId}`, {
+        name: sheet.name
+      })
+      .then(res => console.log(res))
+      .catch(err => console.error(err))
+  }
+
+  // check if sheet has loaded
+  if (isObjectEmpty(sheet)) return <p>Loading...</p>
+
+  // parse data
+  const data = JSON.parse(sheet.data)
+
   const handleChange = (event, row, col) => {
     const { value } = event.target
+    const data = JSON.parse(sheet.data)
 
     // dr = data row
     // dc = data column
@@ -24,11 +45,12 @@ const Sheet = () => {
         ? dr.map((dc, ind) => (ind === col ? { ...dc, value } : dc))
         : dr
     })
-    return set(arr)
+    return set({ ...sheet, data: JSON.stringify(arr) })
   }
 
   const handleTypeChange = (event, col) => {
     const { value } = event.target
+    const data = JSON.parse(sheet.data)
 
     // dr = data row
     // dc = data column
@@ -39,7 +61,12 @@ const Sheet = () => {
       })
     })
 
-    return set(arr)
+    return set({ ...sheet, data: JSON.stringify(arr) })
+  }
+
+  const handleNameChange = e => {
+    const { value } = e.target
+    return set({ ...sheet, name: value })
   }
 
   const addColumn = () => {
@@ -48,7 +75,7 @@ const Sheet = () => {
       dr.push({ type: '', value: '' })
       return dr
     })
-    return set(arr)
+    return set({ ...sheet, data: JSON.stringify(arr) })
   }
 
   const removeColumn = () => {
@@ -57,7 +84,7 @@ const Sheet = () => {
       dr.pop()
       return dr
     })
-    return set(arr)
+    return set({ ...sheet, data: JSON.stringify(arr) })
   }
 
   const addRow = () => {
@@ -66,14 +93,20 @@ const Sheet = () => {
       mutation.push({ value: '' })
     }
     const arr = [...data, mutation]
-    return set(arr)
+    return set({ ...sheet, data: JSON.stringify(arr) })
   }
 
   return (
     <>
+      <label>Sheet Name: </label>
+      <input value={sheet.name} onChange={handleNameChange} />
+      <Link to="/">Go Home</Link>
+      <br />
+      <br />
       <button onClick={addColumn}>Add Column</button>
       <button onClick={removeColumn}>Remove Column</button>
       <button onClick={addRow}>Add Row</button>
+      <button onClick={handleSave}>Save</button>
       <table>
         <thead>
           <tr>
@@ -120,21 +153,6 @@ const Sheet = () => {
       </table>
     </>
   )
-  // return data.map((d, row) => {
-  //   return (
-  //     <div key={row}>
-  //       {d.map((item, col) => {
-  //         return (
-  //           <input
-  //             key={col}
-  //             value={item}
-  //             onChange={e => handleChange(e, row, col)}
-  //           />
-  //         )
-  //       })}
-  //     </div>
-  //   )
-  // })
 }
 
 export default Sheet
