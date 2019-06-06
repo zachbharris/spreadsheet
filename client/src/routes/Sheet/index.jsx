@@ -22,7 +22,8 @@ const Sheet = ({ match }) => {
   const handleSave = () => {
     axios
       .patch(`/api/sheets/${sheetId}`, {
-        name: sheet.name
+        name: sheet.name,
+        data: sheet.data
       })
       .then(res => console.log(res))
       .catch(err => console.error(err))
